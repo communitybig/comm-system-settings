@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Verifica se os efeitos do Gnome estão ativados
+checked_effects=$(gsettings get org.gnome.desktop.interface enable-animations)
+if [ "$checked_effects" = "false" ]; then
+    gsettings set org.gnome.desktop.interface enable-animations true
+else
+    gsettings set org.gnome.desktop.interface enable-animations false
+fi

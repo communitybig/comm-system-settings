@@ -1,0 +1,198 @@
+<!-- Name of JSON file with translation -->
+<script>const projectName = 'comm-system-settings';</script>
+
+<!-- Include the generic header (CSS and JS) -->
+<?include html /usr/share/bigbashview/framework/html/genericHeader.html?>
+
+<!-- Include window control side decorator -->
+<link href="/usr/share/bigbashview/framework/css/client-side-decorator.css" rel="stylesheet">
+<script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+<script src="/usr/share/bigbashview/framework/js/client-side-decorator.js" defer></script>
+
+<!-- Includes the window control side shell script -->
+<?include bash /usr/share/bigbashview/framework/shell/windowControlSide.sh 2> /dev/null ?>
+
+<title stonejs> BigCommunity System Settings </title>
+
+<style>
+    p {color: white;margin-top: 1rem;}
+</style>
+
+<body x-data="taskManager()" x-init="fetchTasks()" @keydown.window="handleGlobalKeypress($event)">
+
+    <!-- Using Client Side Decoration use body transparent to make shadow, and page work like real body -->
+    <div id="page">
+        <div id="title-bar" class="drag-area">
+            <div id="title-auto-change-side" class="row drag-area">
+                <img class="circle mini drag-area" src="/usr/share/icons/hicolor/scalable/apps/comm-system-settings.svg">
+                <h5 class="small drag-area" stonejs>BigCommunity System Settings</h5>
+            </div>
+
+            <div class="field prefix round input-search-center">
+                <i>search</i>
+                <input type="search" x-model="filterText" @input="filterTasks()" :placeholder="placeholderText" id="searchInput" x-ref="searchInput">
+            </div>
+        </div>
+
+        <div id="main" class="drag-area page-content-without-left-bar">
+            <template x-for="(tasks, category) in categorizedTasks" :key="category">
+                <div>
+                    <h2 x-text="category" class="category-title"></h2>
+                    <template x-for="task in tasks" :key="task.id">
+                        <div class="row margin small-padding active-category small-round">
+                            <div class="max">
+                                <span x-text="task.name"></span><br>
+                                <span class="opacity-40" x-text="task.description"></span>
+                            </div>
+                            <div class="row">
+                                <div class="center-align">
+                                    <button @click="executeTask(task)" class="surface-bgcolor small-round vertical small-padding" stonejs>Execute</button>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </div>
+
+    <!-- Modal for result -->
+    <dialog id="result-modal" class="dialog center middle">
+        <h5 class="small no-round padding center-align" x-text="titleTask"></h5>
+        <p x-text="resultMessage"></p>
+        <nav class="right-align">
+            <button @click="hideResultModal()" stonejs>Close</button>
+        </nav>
+    </dialog>
+
+<script>
+function taskManager() {
+    return {
+        tasks: [],
+        filterText: "",
+        placeholderText: _('Search...'),
+        categorizedTasks: {},
+
+        fetchTasks() {
+            // task list
+             this.tasks = [
+                {
+                    id: 1,
+                    name: _("System Update"),
+                    description: "Atualiza os pacotes do sistema",
+                    command: "echo 0",
+                    category: "System"
+                },
+                {
+                    id: 2,
+                    name: "Limpar Cache",
+                    description: "Remove arquivos temporários",
+                    command: "rm -rf /tmp/*",
+                    category: "Browsers"
+                },
+                {
+                    id: 3,
+                    name: "Instalar Software",
+                    description: "Instala o software solicitado",
+                    command: "sudo apt install vim",
+                    category: "System"
+                },
+                {
+                    id: 4,
+                    name: "Backup",
+                    description: "Realiza o backup dos dados",
+                    command: "cp -r /home/user /backup",
+                    category: "System"
+                }
+            ];
+            this.categorizeTasks();
+        },
+
+        filterTasks() {
+            const search = this.normalizeText(this.filterText);
+            this.categorizedTasks = this.tasks.filter(task =>
+                this.normalizeText(task.name).includes(search) ||
+                this.normalizeText(task.description).includes(search)
+            ).reduce((acc, task) => {
+                acc[task.category] = acc[task.category] || [];
+                acc[task.category].push(task);
+                return acc;
+            }, {});
+            this.sortCategories();
+        },
+
+        categorizeTasks() {
+            this.categorizedTasks = this.tasks.reduce((acc, task) => {
+                acc[task.category] = acc[task.category] || [];
+                acc[task.category].push(task);
+                return acc;
+            }, {});
+            this.sortCategories();
+        },
+
+        sortCategories() {
+            // Sort categories
+            const sortedKeys = Object.keys(this.categorizedTasks).sort((a, b) =>
+                this.normalizeText(a).localeCompare(this.normalizeText(b))
+            );
+            const sortedCategories = {};
+            sortedKeys.forEach(key => {
+                sortedCategories[key] = this.categorizedTasks[key];
+            });
+            this.categorizedTasks = sortedCategories;
+        },
+
+        executeTask(task) {
+            fetch(`/execute$${task.command}`)
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.output || "Unknown Error");
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    this.titleTask = `${task.name}`
+                    this.resultMessage = _('Configuration completed successfully!');
+                })
+                .catch(error => {
+                    this.resultMessage = `${error.message}`;
+                })
+                .finally(() => {
+                    document.querySelector("#result-modal").showModal();
+                });
+        },
+
+        hideResultModal() {
+            document.querySelector("#result-modal").close();
+        },
+
+        normalizeText(text) {
+            if (typeof text !== 'string') return "";
+            return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+        },
+
+        handleGlobalKeypress(event) {
+            if (!['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+                if (event.key === 'Backspace' && this.filterText.length > 0) {
+                    this.filterText = this.filterText.slice(0, -1);
+                    this.filterPrograms();
+                } else if (event.key.length === 1) {
+                    this.filterText += event.key;
+                    this.filterPrograms();
+                }
+                this.$nextTick(() => {
+                    this.$refs.searchInput.focus();
+                });
+            }
+        }
+    };
+}
+
+document.body.addEventListener('contextmenu', function (event) {
+    event.preventDefault();
+});
+
+</script>
+</body>

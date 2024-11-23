@@ -1,0 +1,22 @@
+#!/bin/bash
+
+# Define the application name
+appName="comm-system-settings"
+
+# Set up internationalization
+# Define the directory where localization files are stored
+export TEXTDOMAINDIR="/usr/share/locale"
+# Set the name of the text domain for translations
+export TEXTDOMAIN=$appName
+
+# Navigate to the application directory
+cd "/usr/share/bigbashview/apps/$appName"
+
+# Launch BigBashView with specific parameters
+bbv -n "bigsettings" -p "bigsettings" -w frameless \
+    -c transparent -s 850x650 index.html
+
+# Explanation of parameters:
+# -n: Sets the window name
+# -p: Sets the window class (for window managers)
+# -s: Sets the window size (width x height)

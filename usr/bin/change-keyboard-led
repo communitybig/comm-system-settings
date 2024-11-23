@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Usage:
+#
+# change-keyboard-led on
+# change-keyboard-led off
+# change-keyboard-led
+# If not using 'on' or 'off', it will just switch the current state
+
+# Configuration file path
+ledConfigFile="$HOME/.config/ledkeyboard"
+
+turnLedOn() {
+    echo > "$ledConfigFile"
+    xset led named "Scroll Lock"
+    #xset led
+}
+
+turnLedOff() {
+    rm -f "$ledConfigFile"
+    xset -led named "Scroll Lock"
+    #xset -led
+}
+
+toggleLed() {
+    ledStatus=$(xset -q | grep -o 'Scroll Lock:.*')
+    if [ "$ledStatus" = "Scroll Lock: off" ]; then
+        turnLedOn
+    else
+        turnLedOff
+    fi 
+}
+
+# Main logic
+if [ "$1" = "on" ]; then
+    turnLedOn
+elif [ "$1" = "off" ]; then
+    turnLedOff
+else
+    toggleLed
+fi

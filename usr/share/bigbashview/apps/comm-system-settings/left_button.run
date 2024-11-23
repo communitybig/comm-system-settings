@@ -1,0 +1,9 @@
+#!/bin/bash
+
+# Passa os botões da janela para o lado esquerdo
+checked_left_button=$(gsettings get org.gnome.desktop.wm.preferences button-layout)
+if [ "$checked_left_button" = "'close,minimize,maximize:'" ]; then
+    gsettings set org.gnome.desktop.wm.preferences button-layout ':minimize,maximize,close'
+else
+    gsettings set org.gnome.desktop.wm.preferences button-layout 'close,minimize,maximize:'
+fi

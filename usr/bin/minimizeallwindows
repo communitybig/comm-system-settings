@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# Get the ID of the currently active window
+activeWindowId=$(xdotool getactivewindow)
+
+# Detect the monitor that contains the active window
+monitorWithFullscreen=$(detect_window_monitor $activeWindowId)
+
+# File to store IDs of minimized windows (commented out)
+# minimizedWindowsFile="$HOME/.cache/minimizedallwindows"
+
+# Remove the file containing minimized window IDs (commented out)
+# rm -f "$minimizedWindowsFile"
+
+# Iterate through all visible windows and minimize them if necessary
+for windowId in $(xdotool search --onlyvisible --name ".")
+do
+    monitor=$(detect_window_monitor $windowId)
+    
+    if [ $windowId != $activeWindowId ] && [ "$monitorWithFullscreen" = "$monitor" ]
+    then
+        xdotool windowminimize $windowId
+        # Uncomment the following line to store minimized window IDs
+        # echo "$windowId" >> "$minimizedWindowsFile"
+    fi
+done

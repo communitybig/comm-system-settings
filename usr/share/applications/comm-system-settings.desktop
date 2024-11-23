@@ -1,0 +1,37 @@
+[Desktop Entry]
+Type=Application
+Terminal=false
+Name=BigCommunity Settings
+Name[bg]=Настройки на BigLinux
+Name[cs]=Nastavení BigLinuxu
+Name[da]=BigLinux indstillinger
+Name[de]=BigLinux-Einstellungen
+Name[el]=Ρυθμίσεις του BigLinux
+Name[es]=Configuración de BigLinux
+Name[et]=BigLinuxi seaded
+Name[fi]=BigLinux-asetukset
+Name[fr]=Paramètres de BigLinux
+Name[he]=הגדרות BigLinux
+Name[hr]=Postavke BigLinuxa
+Name[hu]=BigLinux beállítások
+Name[is]=Stillingar á BigLinux
+Name[it]=Impostazioni di BigLinux
+Name[ja]=BigLinux の設定
+Name[ko]=BigLinux 설정
+Name[nl]=BigLinux instellingen
+Name[no]=BigLinux innstillinger
+Name[pl]=Ustawienia BigLinuxa
+Name[pt]=Ajustes do BigCommunity
+Name[ro]=Setări BigLinux
+Name[ru]=Настройки BigLinux
+Name[sk]=Nastavenia BigLinuxu
+Name[sv]=Inställningar för BigLinux
+Name[tr]=BigLinux Ayarları
+Name[uk]=Налаштування BigLinux
+Name[zh]=BigLinux 设置
+Categories=Settings;
+Exec=comm-system-settings
+Icon=comm-system-settings
+StartupNotify=true
+
+
