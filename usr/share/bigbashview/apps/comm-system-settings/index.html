@@ -15,8 +15,14 @@
 <title stonejs> BigCommunity System Settings </title>
 
 <style>
-    p {color: white;margin-top: 1rem;}
+    p {
+        color: white;
+        margin-top: 1rem;
+    }
+
 </style>
+
+<?include bash ./check_log.sh?>
 
 <body x-data="taskManager()" x-init="fetchTasks()" @keydown.window="handleGlobalKeypress($event)">
 
@@ -44,10 +50,11 @@
                                 <span x-text="task.name"></span><br>
                                 <span class="opacity-40" x-text="task.description"></span>
                             </div>
-                            <div class="row">
-                                <div class="center-align">
-                                    <button @click="executeTask(task)" class="surface-bgcolor small-round vertical small-padding" stonejs>Execute</button>
-                                </div>
+                            <div>
+                                <label class="switch">
+                                    <input type="checkbox" @click="toggleSwitch(task)" :checked="task.isActive">
+                                    <span></span>
+                                </label>
                             </div>
                         </div>
                     </template>
@@ -78,34 +85,42 @@ function taskManager() {
              this.tasks = [
                 {
                     id: 1,
-                    name: _("System Update"),
-                    description: "Atualiza os pacotes do sistema",
-                    command: "echo 0",
-                    category: "System"
+                    name: _("Right side buttons"),
+                    description: _("Reposition interface buttons to align on the right side."),
+                    command: "./toggle_window_buttons.sh",
+                    category: _("Usability"),
                 },
                 {
                     id: 2,
-                    name: "Limpar Cache",
-                    description: "Remove arquivos temporários",
-                    command: "rm -rf /tmp/*",
-                    category: "Browsers"
+                    name: _("Turn On Keyboard RGB"),
+                    description: _("Lights keyboard RGB when available."),
+                    command: "./toggle_keyboard_rgb.sh",
+                    category: _("System"),
                 },
                 {
                     id: 3,
-                    name: "Instalar Software",
-                    description: "Instala o software solicitado",
-                    command: "sudo apt install vim",
-                    category: "System"
+                    name: _("Enable NumLock at System Startup"),
+                    description: _("Always leave Num Lock activated when turning on the computer."),
+                    command: "./toggle_numlock.sh",
+                    category: _("System"),
                 },
                 {
                     id: 4,
-                    name: "Backup",
-                    description: "Realiza o backup dos dados",
-                    command: "cp -r /home/user /backup",
-                    category: "System"
+                    name: _("Hide Boot Manager (GRUB)"),
+                    description: _("Hides the boot manager when the computer starts."),
+                    command: "./grub.run",
+                    category: _("System"),
+                },
+                {
+                    id: 5,
+                    name: _("Disable Plymouth Logging"),
+                    description: _("Hides startup messages that are displayed in plymouth."),
+                    command: "./toggle_plymouth_log.sh",
+                    category: _("System"),
                 }
             ];
             this.categorizeTasks();
+            this.loadTasksStates(this.tasks);
         },
 
         filterTasks() {
@@ -142,25 +157,46 @@ function taskManager() {
             this.categorizedTasks = sortedCategories;
         },
 
-        executeTask(task) {
+        loadTasksStates(tasks) {
+            fetch(`/execute$jq < ~/.config/system_settings_log.json`)
+                .then(response => response.json())
+                .then(data => {
+                    // Atualiza os estados no frontend
+                    tasks.forEach(task => {
+                        const logTask = data.TASK.find(t => t.id === task.id);
+                        if (logTask) {
+                            task.isActive = logTask.isActive === 1; // Converte para booleano
+                            console.log(logTask.id);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error("Error to load states:", error);
+                });
+        },
+
+        toggleSwitch(task) {
             fetch(`/execute$${task.command}`)
                 .then(response => {
                     if (!response.ok) {
-                        return response.json().then(err => {
+                        return response.text().then(err => {
                             throw new Error(err.output || "Unknown Error");
                         });
                     }
-                    return response.json();
+                    return response.text();
                 })
                 .then(data => {
-                    this.titleTask = `${task.name}`
+                    task.isActive = !task.isActive;
+                    this.titleTask = `${task.name}`;
                     this.resultMessage = _('Configuration completed successfully!');
                 })
                 .catch(error => {
                     this.resultMessage = `${error.message}`;
                 })
                 .finally(() => {
-                    document.querySelector("#result-modal").showModal();
+                    setTimeout(() => {
+                      document.querySelector("#result-modal").showModal();
+                    }, 1000);
                 });
         },
 
