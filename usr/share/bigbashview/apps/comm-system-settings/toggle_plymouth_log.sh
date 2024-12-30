@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-if [[ "$(systemctl is-enabled plymouth-show-log-comm.service)" == "enable" ]];then
+if [[ "$(systemctl is-enabled plymouth-show-log-comm.service)" == "enabled" ]];then
     systemctl disable --now plymouth-show-log-comm.service
     ./check_log.sh update 5 1
 else
